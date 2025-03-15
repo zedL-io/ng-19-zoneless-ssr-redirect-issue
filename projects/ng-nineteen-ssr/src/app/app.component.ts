@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -8,5 +8,10 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  title = 'ng-nineteen-ssr';
+
+  title = signal('ng-nineteen-ssr');
+
+  changeTitle() {
+    this.title.set('ng-nineteen-ssr 2');
+  }
 }
