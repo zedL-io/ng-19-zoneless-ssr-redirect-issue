@@ -4,5 +4,10 @@
   <button (click)="changeTitle()">Change Title</button>
 </main>
 
+@defer (hydrate on interaction()) {
+  <app-news></app-news>
+}@placeholder {
+  <span>click to load</span>
+}
 
 <router-outlet />
