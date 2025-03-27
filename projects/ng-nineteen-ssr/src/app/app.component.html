@@ -12,10 +12,12 @@
 
 
 <table>
-  <tr>
-    <th>Name</th><th>Price</th>
-  </tr>
-
+  <thead>
+    <tr>
+      <th>Name</th><th>Price</th>
+    </tr>
+  </thead>
+  <tbody>
     @for (book of books(); track book.id) {
       @let price = book.price * 1.19;
     <tr>
@@ -23,6 +25,7 @@
       <td>{{ price.toFixed(2) | currency }}</td>
     </tr>
     }
+  </tbody>
 </table>
 
 <router-outlet />
