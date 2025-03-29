@@ -39,57 +39,60 @@ app.use(
 );
 
 /**
- * Handle all other requests by rendering the Angular application.
+ * Handle all other requests by rendering the Angular application and set CSP header and nonce in the html response.
  */
-app.use((req, res, next) => {
-  const nonce = crypto
-    .randomBytes(16)
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+app.use(async (req, res, next) => {
+  try {
+    // Generiere ein nonce
+    const nonce = crypto
+      .randomBytes(16)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
 
-  angularApp
-    .handle(req)
-    .then(async (renderResponse) => {
-      if (!renderResponse || !renderResponse.body) {
-        // Falls kein HTML zurückgegeben wird, 500 Fehlerantwort senden
-        return res.status(500).send('SSR Rendering failed');
-      }
+    // Warten auf die Antwort von Angular SSR
+    const renderResponse = await angularApp.handle(req);
 
-      // Extrahiere das HTML (hier `body` oder eine andere Eigenschaft)
-      const htmlResponse = await renderResponse.text();
+    if (!renderResponse || !renderResponse.body) {
+      // Falls kein HTML zurückgegeben wird, 500 Fehlerantwort senden
+      return res.status(500).send('SSR Rendering failed');
+    }
 
-      // Füge Nonce zu <script> und <style> Tags hinzu
-      const updatedHtml = htmlResponse
-        .replace(/<script.*?>/g, (match) => {
-          return match.replace(/<script/g, `<script nonce="${nonce}"`);
-        })
-        .replace(/<style.*?>/g, (match) => {
-          return match.replace(/<style/g, `<style nonce="${nonce}"`);
-        });
+    // Extrahiere das HTML (hier `body` oder eine andere Eigenschaft)
+    const htmlResponse = await renderResponse.text();
 
-      // Setze den Content-Security-Policy-Header
-      const cspHeader = [
-        "default-src 'self';",
-        `script-src 'self' 'nonce-${nonce}';`,
-        `style-src 'self' 'nonce-${nonce}';`,
-        "img-src 'self' data:;",
-        "connect-src 'self' https://api.example.com;",
-        "frame-src 'self' https://identity-provider.com;",
-        "object-src 'none';",
-        "base-uri 'self';",
-        "form-action 'self';",
-      ]
-        .join(' ')
-        .replace(/\s+/g, ' ');
+    // Füge Nonce zu <script> und <style> Tags hinzu
+    const updatedHtml = htmlResponse
+      .replace(/<script.*?>/g, (match) => {
+        return match.replace(/<script/g, `<script nonce="${nonce}"`);
+      })
+      .replace(/<style.*?>/g, (match) => {
+        return match.replace(/<style/g, `<style nonce="${nonce}"`);
+      });
 
-      res.setHeader('Content-Security-Policy', cspHeader);
+    // Setze den Content-Security-Policy-Header
+    const cspHeader = [
+      "default-src 'self';",
+      `script-src 'self' 'nonce-${nonce}';`,
+      `style-src 'self' 'nonce-${nonce}';`,
+      "img-src 'self' data:;",
+      "connect-src 'self' https://api.example.com;",
+      "frame-src 'self' https://identity-provider.com;",
+      "object-src 'none';",
+      "base-uri 'self';",
+      "form-action 'self';",
+    ]
+      .join(' ')
+      .replace(/\s+/g, ' ');
 
-      // Sende die Antwort an den Client
-      return res.send(updatedHtml); // `return` hinzufügen, damit der Codepfad endet
-    })
-    .catch(next); // Fehler an den nächsten Middleware-Handler weitergeben
+    res.setHeader('Content-Security-Policy', cspHeader);
+
+    // Sende die Antwort an den Client
+    return res.send(updatedHtml); // `return` hinzufügen, damit der Codepfad endet
+  } catch (error) {
+    next(error); // Fehler an den nächsten Middleware-Handler weitergeben
+  }
 });
 
 /**
