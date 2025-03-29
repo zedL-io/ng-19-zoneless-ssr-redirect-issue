@@ -28,31 +28,6 @@ const angularApp = new AngularNodeAppEngine();
  */
 
 /**
- * Middleware to create a nonce
- */
-
-app.use((req, res, next) => {
-  const nonce = crypto.randomBytes(16).toString('base64');
-  res.locals['cspNonce'] = nonce;
-
-  const cspHeader = `default-src 'self';
-  script-src 'self' 'nonce-${nonce}';
-  style-src 'self' 'nonce-${nonce}';
-  img-src 'self' data:;
-  connect-src 'self' https://api.example.com;
-  frame-src 'self' https://identity-provider.com;
-  object-src 'none';
-  base-uri 'self';
-  form-action 'self';`.replace(/\s+/g, ' ');
-
-  console.log('CSP HEADER:', cspHeader); // Debug-Ausgabe
-
-  res.setHeader('Content-Security-Policy', cspHeader);
-
-  next();
-});
-
-/**
  * Serve static files from /browser
  */
 app.use(
@@ -66,12 +41,55 @@ app.use(
 /**
  * Handle all other requests by rendering the Angular application.
  */
+app.use((req, res, next) => {
+  const nonce = crypto
+    .randomBytes(16)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 
-app.use('/**', (req, res, next) => {
   angularApp
-    .handle(req, { data: { nonce: res.locals['cspNonce'] } }) // Nonce an Angular übergeben
-    .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))
-    .catch(next);
+    .handle(req)
+    .then(async (renderResponse) => {
+      if (!renderResponse || !renderResponse.body) {
+        // Falls kein HTML zurückgegeben wird, 500 Fehlerantwort senden
+        return res.status(500).send('SSR Rendering failed');
+      }
+
+      // Extrahiere das HTML (hier `body` oder eine andere Eigenschaft)
+      const htmlResponse = await renderResponse.text();
+
+      // Füge Nonce zu <script> und <style> Tags hinzu
+      const updatedHtml = htmlResponse
+        .replace(/<script.*?>/g, (match) => {
+          return match.replace(/<script/g, `<script nonce="${nonce}"`);
+        })
+        .replace(/<style.*?>/g, (match) => {
+          return match.replace(/<style/g, `<style nonce="${nonce}"`);
+        });
+
+      // Setze den Content-Security-Policy-Header
+      const cspHeader = [
+        "default-src 'self';",
+        `script-src 'self' 'nonce-${nonce}';`,
+        `style-src 'self' 'nonce-${nonce}';`,
+        "img-src 'self' data:;",
+        "connect-src 'self' https://api.example.com;",
+        "frame-src 'self' https://identity-provider.com;",
+        "object-src 'none';",
+        "base-uri 'self';",
+        "form-action 'self';",
+      ]
+        .join(' ')
+        .replace(/\s+/g, ' ');
+
+      res.setHeader('Content-Security-Policy', cspHeader);
+
+      // Sende die Antwort an den Client
+      return res.send(updatedHtml); // `return` hinzufügen, damit der Codepfad endet
+    })
+    .catch(next); // Fehler an den nächsten Middleware-Handler weitergeben
 });
 
 /**
