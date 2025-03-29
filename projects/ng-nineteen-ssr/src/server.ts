@@ -43,7 +43,7 @@ app.use(
  */
 app.use(async (req, res, next) => {
   try {
-    // Generiere ein nonce
+    // create a nonce
     const nonce = crypto
       .randomBytes(16)
       .toString('base64')
@@ -51,18 +51,18 @@ app.use(async (req, res, next) => {
       .replace(/\//g, '_')
       .replace(/=+$/, '');
 
-    // Warten auf die Antwort von Angular SSR
+    // Waiting for the response from Angular SSR
     const renderResponse = await angularApp.handle(req);
 
-    if (!renderResponse || !renderResponse.body) {
-      // Falls kein HTML zurückgegeben wird, 500 Fehlerantwort senden
+    if (!renderResponse || !renderResponse.text) {
+      // If no HTML is returned, send 500 error response
       return res.status(500).send('SSR Rendering failed');
     }
 
-    // Extrahiere das HTML (hier `body` oder eine andere Eigenschaft)
+    // Extract the HTML
     const htmlResponse = await renderResponse.text();
 
-    // Füge Nonce zu <script> und <style> Tags hinzu
+    // Add nonce to <script> and <style> tags
     const updatedHtml = htmlResponse
       .replace(/<script.*?>/g, (match) => {
         return match.replace(/<script/g, `<script nonce="${nonce}"`);
@@ -71,7 +71,7 @@ app.use(async (req, res, next) => {
         return match.replace(/<style/g, `<style nonce="${nonce}"`);
       });
 
-    // Setze den Content-Security-Policy-Header
+    // Set the Content-Security-Policy header
     const cspHeader = [
       "default-src 'self';",
       `script-src 'self' 'nonce-${nonce}';`,
@@ -88,10 +88,12 @@ app.use(async (req, res, next) => {
 
     res.setHeader('Content-Security-Policy', cspHeader);
 
-    // Sende die Antwort an den Client
-    return res.send(updatedHtml); // `return` hinzufügen, damit der Codepfad endet
+    // Send the response to the client
+    res.send(updatedHtml); // `return` hinzufügen, damit der Codepfad endet
   } catch (error) {
     next(error); // Fehler an den nächsten Middleware-Handler weitergeben
+  } finally {
+    return;
   }
 });
 
