@@ -1,32 +1,6 @@
-
 <main class="main">
   <h1>Hello, {{ title() }}</h1>
   <button (click)="changeTitle()">Change Title</button>
 </main>
 
-@defer (hydrate on interaction()) {
-  <app-news></app-news>
-}@placeholder {
-  <span>click to load</span>
-}
-
-
-<table>
-  <thead>
-    <tr>
-      <th>Name</th><th>Price</th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (book of books(); track book.id) {
-      @let price = book.price * 1.19;
-    <tr>
-      <td>{{ book.name }}</td>
-      <td>{{ price.toFixed(2) | currency }}</td>
-    </tr>
-    }
-  </tbody>
-</table>
-
 <router-outlet />
-

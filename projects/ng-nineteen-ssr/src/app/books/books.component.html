@@ -1,0 +1,20 @@
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Price</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (book of books(); track book.id) {
+      @let price = book.price * 1.19;
+      <tr>
+        <td>{{ book.name }}</td>
+        <td>{{ price.toFixed(2) | currency }}</td>
+      </tr>
+    }
+  </tbody>
+</table>
+<p>
+  <a routerLink="/home">Home</a>
+</p>
