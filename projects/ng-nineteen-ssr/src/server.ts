@@ -30,9 +30,25 @@ const angularApp = new AngularNodeAppEngine();
 /**
  * Middleware to create a nonce
  */
+
 app.use((req, res, next) => {
   const nonce = crypto.randomBytes(16).toString('base64');
   res.locals['cspNonce'] = nonce;
+
+  const cspHeader = `default-src 'self';
+  script-src 'self' 'nonce-${nonce}';
+  style-src 'self' 'nonce-${nonce}';
+  img-src 'self' data:;
+  connect-src 'self' https://api.example.com;
+  frame-src 'self' https://identity-provider.com;
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';`.replace(/\s+/g, ' ');
+
+  console.log('CSP HEADER:', cspHeader); // Debug-Ausgabe
+
+  res.setHeader('Content-Security-Policy', cspHeader);
+
   next();
 });
 
@@ -50,9 +66,10 @@ app.use(
 /**
  * Handle all other requests by rendering the Angular application.
  */
+
 app.use('/**', (req, res, next) => {
   angularApp
-    .handle(req)
+    .handle(req, { data: { nonce: res.locals['cspNonce'] } }) // Nonce an Angular übergeben
     .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))
     .catch(next);
 });
