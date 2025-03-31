@@ -11,5 +11,6 @@ import { BooksService } from '../services';
   styleUrl: './books.component.scss',
 })
 export class BooksComponent {
-  books = toSignal(inject(BooksService).getBooks());
+  #booksService = inject(BooksService);
+  books = toSignal(this.#booksService.getBooks());
 }
