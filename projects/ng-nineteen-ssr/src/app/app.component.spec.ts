@@ -6,7 +6,7 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideExperimentalZonelessChangeDetection()]
+      providers: [provideExperimentalZonelessChangeDetection()],
     }).compileComponents();
   });
 
@@ -19,7 +19,7 @@ describe('AppComponent', () => {
   it(`should have the 'ng-nineteen-ssr' title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('ng-nineteen-ssr');
+    expect(app.title()).toEqual('ng-nineteen-ssr');
   });
 
   it('should render title', () => {
