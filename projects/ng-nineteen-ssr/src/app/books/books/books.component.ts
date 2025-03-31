@@ -1,6 +1,8 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { BooksService } from '../services';
 
 @Component({
   selector: 'app-books',
@@ -9,9 +11,5 @@ import { RouterLink } from '@angular/router';
   styleUrl: './books.component.scss',
 })
 export class BooksComponent {
-  books = signal([
-    { id: 1, name: 'Dune', price: 2.34 },
-    { id: 2, name: 'Dune 2', price: 2.78 },
-    { id: 3, name: 'Dune 3', price: 2.65 },
-  ]);
+  books = toSignal(inject(BooksService).getBooks());
 }
