@@ -5,8 +5,9 @@ import { BooksService } from '../services';
 import { Book } from '../models';
 
 describe('BooksComponent', () => {
+  const mockBookData = [{ id: 1, name: 'Test Book', price: 20 }];
   const mockBooksService = {
-    getBooks: () => of<Book[]>([{ id: 1, name: 'Test Book', price: 20 }]),
+    getBooks: () => of<Book[]>(mockBookData),
   };
   const injector = createEnvironmentInjector(
     [{ provide: BooksService, useValue: mockBooksService }],
@@ -25,6 +26,6 @@ describe('BooksComponent', () => {
   });
 
   it('should have books data from service', () => {
-    expect(component.books()).toEqual([{ id: 1, name: 'Test Book', price: 20 } as any]);
+    expect(component.books()).toEqual(mockBookData);
   });
 });
