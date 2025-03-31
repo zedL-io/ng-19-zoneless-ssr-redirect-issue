@@ -1,25 +1,18 @@
+import { createEnvironmentInjector, runInInjectionContext } from '@angular/core';
+import { of } from 'rxjs';
 import { BooksComponent } from './books.component';
 import { BooksService } from '../services';
-import { of } from 'rxjs';
-import {
-  EnvironmentInjector,
-  inject,
-  createEnvironmentInjector,
-  runInInjectionContext,
-} from '@angular/core';
 import { Book } from '../models';
 
-// Mock für BooksService
-const mockBooksService = {
-  getBooks: () => of<Book[]>([{ id: 1, name: 'Test Book', price: 20 }]),
-};
-
 describe('BooksComponent', () => {
-  let component: BooksComponent;
+  const mockBooksService = {
+    getBooks: () => of<Book[]>([{ id: 1, name: 'Test Book', price: 20 }]),
+  };
   const injector = createEnvironmentInjector(
     [{ provide: BooksService, useValue: mockBooksService }],
     null!,
   );
+  let component: BooksComponent;
 
   beforeEach(() => {
     runInInjectionContext(injector, () => {
