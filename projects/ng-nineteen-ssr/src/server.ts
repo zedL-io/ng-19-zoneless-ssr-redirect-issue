@@ -95,7 +95,8 @@ app.use('/**', async (req, res, next) => {
       next();
     }
   } catch (error) {
-    next(error);
+    console.error('Error during SSR processing:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
