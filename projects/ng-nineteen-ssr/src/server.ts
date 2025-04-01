@@ -83,13 +83,13 @@ app.use('/**', async (req, res, next) => {
         .join(' ')
         .replace(/\s+/g, ' ');
 
-      res.setHeader('Content-Security-Policy', cspHeader);
-
       const newResponse = new Response(html, {
         status: response.status,
         statusText: response.statusText,
         headers: response.headers,
       });
+      newResponse.headers.set('Content-Security-Policy', cspHeader);
+
       writeResponseToNodeResponse(newResponse, res);
     } else {
       next();
