@@ -11,7 +11,8 @@ export const redirectGuard: CanActivateFn = () => {
 };
 
 export const routes: Routes = [
-  { path: '', canActivate: [redirectGuard], children: [] },
+  // { path: '', canActivate: [redirectGuard], children: [] },
   { path: 'home', component: HomeComponent },
   { path: 'books', component: BooksComponent },
+  { path: '',   redirectTo: '/home', pathMatch: 'full' },
 ];
