@@ -64,13 +64,9 @@ app.use('/**', async (req, res, next) => {
       let html = await response.text();
 
       // Add nonce to <script> and <style> tags
-      html = html
-        .replace(/<script.*?>/g, (match) => {
-          return match.replace(/<script/g, `<script nonce="${nonce}"`);
-        })
-        .replace(/<style.*?>/g, (match) => {
-          return match.replace(/<style/g, `<style nonce="${nonce}"`);
-        });
+      html = html.replace(/<(script|style)(.*?)>/g, (match, tag, attrs) => {
+        return `<${tag} nonce="${nonce}"${attrs}>`;
+      });
 
       // Set the Content-Security-Policy header
       const cspHeader = [
